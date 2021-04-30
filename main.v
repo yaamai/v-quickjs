@@ -2,7 +2,7 @@ module main
 
 #flag -I quickjs
 #flag -D EMSCRIPTEN
-#flag -D CONFIG_VERSION="2021-03-27"
+#flag -D CONFIG_VERSION='"'2021-03-27'"'
 #flag @VROOT/quickjs/libbf.o
 #flag @VROOT/quickjs/cutils.o
 #flag @VROOT/quickjs/libunicode.o
@@ -33,6 +33,12 @@ struct C.JSValue {}
 struct C.JSRuntime {}
 struct C.JSContext {}
 
+fn C.JS_NewInt64(voidptr, i64) C.JSValue
+fn C.JS_NewCFunctionData(voidptr, QuickJsFn, charptr, int, int, int, &C.JSValue) C.JSValue
+fn C.JS_GetProperty(voidptr, C.JSValue, C.JSAtom) C.JSValue
+fn C.JS_NewString(voidptr, charptr) C.JSValue
+fn C.JS_GetPropertyStr(voidptr, C.JSValue, charptr) C.JSValue
+fn C.JS_ToInt64(voidptr, &i64, C.JSValue) int
 
 struct Runtime {
         rt &C.JSRuntime
@@ -75,8 +81,12 @@ fn (mut c Context) new_object() Value {
         return Value{ctx: c.ctx, val: C.JS_NewObject(c.ctx)}
 }
 
-fn (mut c Context) new_function(func QuickJsFn, name string, arg_num int) Value {
-        return Value{ctx: c.ctx, val: C.JS_NewCFunction(c.ctx, func, name.str, arg_num)}
+fn (mut c Context) new_function(origfunc QuickJsFn, name string, arg_num int) Value {
+    func := C.JS_NewCFunction(c.ctx, origfunc, name.str, arg_num)
+    funcptr := unsafe{ u64(origfunc) }
+    println(funcptr)
+    C.JS_SetPropertyStr(c.ctx, func, "_funcptr", C.JS_NewInt64(c.ctx, funcptr))
+    return Value{ctx: c.ctx, val: func}
 }
 
 fn (v Value) is_exception() bool {
@@ -84,8 +94,7 @@ fn (v Value) is_exception() bool {
 }
 
 fn (v Value) as_string() string {
-        return unsafe{cstring_to_vstring(C.JS_ToCString(v.ctx, v.val))}
-}
+        return unsafe{cstring_to_vstring(C.JS_ToCString(v.ctx, v.val))} }
 
 fn (v Value) as_int() int {
         out := 0
@@ -99,6 +108,12 @@ fn (v Value) set_property(key string, value Value) {
 
 
 fn test(ctx voidptr, this C.JSValue, argc int, arg &C.JSValue) C.JSValue {
+        funcptr := C.JS_GetPropertyStr(ctx, this, "_funcptr")
+        out := i64(0)
+        h := C.JS_ToInt64(ctx, &out, funcptr)
+        println(out)
+        println(h)
+
         arg_str := unsafe{
                 cstring_to_vstring(C.JS_ToCString(ctx, arg++))
         }
@@ -146,7 +161,12 @@ fn test_c_callback() {
 fn main() {
         mut rt := new_runtime()
         mut ctx := rt.new_context()
+        obj := ctx.new_object()
+        func := ctx.new_function(test, "log", 2)
+        ctx.get_global().set_property("console", obj)
+        obj.set_property("log", func)
 
         println(ctx.eval("1+2")?.as_int())
+        println(ctx.eval("console.log('aaaaaa')")?.as_int())
 }
 
