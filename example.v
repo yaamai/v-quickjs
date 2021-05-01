@@ -1,20 +1,21 @@
 module main
+
+import os
 import quickjs
 
-fn wrapfn(ctx &quickjs.Context, this quickjs.Value, args []quickjs.Value) quickjs.Value {
-    println("wrap ${args}")
-    return quickjs.Value{ctx: 0}
+fn js_eval_file(mut ctx quickjs.Context, this quickjs.Value, args []quickjs.Value) ?quickjs.Value {
+	return ctx.eval(os.read_file(args[0].as_string())?.str())
+}
+
+fn wrapfn(ctx &quickjs.Context, this quickjs.Value, args []quickjs.Value) ?quickjs.Value {
+	println('wrap $args')
+	return quickjs.Value{
+		ctx: 0
+	}
 }
 
 fn main() {
-        mut rt := quickjs.new_runtime()
-        mut ctx := rt.new_context()
-        obj := ctx.new_object()
-        func := ctx.new_function(wrapfn, "log", 2)
-        ctx.get_global().set_property("console", obj)
-        obj.set_property("log", func)
-
-        println(ctx.eval("1+2")?.as_int())
-        println(ctx.eval("console.log('aaaaaa', 1, 2)")?.as_int())
+	mut ctx := quickjs.new_runtime().new_context()
+	ctx.get_global().set_property('eval_file', ctx.new_function(js_eval_file, 'eval_file', 1))
+	println(ctx.eval("eval_file('test.js')") ?)
 }
-
