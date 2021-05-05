@@ -87,9 +87,17 @@ pub struct Value {
 }
 
 pub fn (mut c Context) eval(script string) ?Value {
+	return c.eval_opts(script, "", 0)
+}
+
+pub fn (mut c Context) eval_strict(script string) ?Value {
+	return c.eval_opts(script, "", C.JS_EVAL_FLAG_STRICT)
+}
+
+fn (mut c Context) eval_opts(script string, filename string, opts int) ?Value {
 	val := Value{
 		ctx: c.ctx
-		val: C.JS_Eval(c.ctx, script.str, script.len, '', C.JS_EVAL_FLAG_STRICT)
+		val: C.JS_Eval(c.ctx, script.str, script.len, filename.str, opts)
 	}
 	if val.is_exception() {
 		exc := c.get_exception()
@@ -224,6 +232,12 @@ pub fn (v Value) set_property(key ObjectKeyType, value Value) {
 	match key {
 		string { C.JS_SetPropertyStr(v.ctx, v.val, key.str, value.val) }
 		int { C.JS_SetPropertyUint32(v.ctx, v.val, key, value.val) }
+	}
+}
+
+pub fn (v Value) set_property_from_map(m map[string]Value) {
+	for key, val in m {
+		v.set_property(key, val)
 	}
 }
 

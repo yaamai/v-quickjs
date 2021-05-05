@@ -1,7 +1,4 @@
 // ENV(object), CMDLINE(array): passed by airi
-ENV = ENV
-CMDLINE = CMDLINE
-
 // alias command base
 let BASE = {}
 function _get_base() {

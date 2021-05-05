@@ -1,6 +1,7 @@
 BASE = [
-    'self',
+    'podman',
     'run',
+    '--rm',
     '-e', 'AIRI_LOG_LEVEL='+ENV.AIRI_LOG_LEVEL,
     '-e', 'USER='+ENV.USER,
     '-e', 'HOME='+ENV.PWD+'/home',
@@ -9,8 +10,8 @@ BASE = [
     '-w', ENV.PWD//,
     // ENV.ISTTY // 'ENV.ISTTY' special env value, if within tty, replaced with '-t'
 ]
-DEFS.ary.suffix = ["--"]
-DEFS.obj.s = ["--"]
+// DEFS.ary.suffix = ["--"]
+// DEFS.obj.s = ["--"]
 
 // c/c++
 let gcc = "docker.io/library/gcc:latest"
