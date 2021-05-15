@@ -1,5 +1,5 @@
 Module {
-	name: 'v-quickjs',
+	name: 'quickjs',
 	description: '',
 	dependencies: []
 }
