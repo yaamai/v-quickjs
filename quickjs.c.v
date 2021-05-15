@@ -170,7 +170,7 @@ fn function_wrapper(jsctx voidptr, this C.JSValue, argc int, arg &C.JSValue, mag
 	mut ctx := &Context(ctx_ptr)
 
 	mut values := []Value{len: argc}
-	argp := arg
+	argp := unsafe { arg }
 	for idx := 0; idx < argc; idx++ {
 		values[idx] = Value{
 			ctx: jsctx
