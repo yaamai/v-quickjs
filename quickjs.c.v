@@ -1,6 +1,6 @@
 module quickjs
 
-#flag -I quickjs
+#flag -I @VROOT/quickjs
 #flag -D EMSCRIPTEN
 #flag -D CONFIG_VERSION='"'2021-03-27'"'
 #flag @VROOT/quickjs/libbf.o
